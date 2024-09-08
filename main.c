@@ -23,7 +23,6 @@
 #define SB RB2
 #define SC RB3
 #define SD RB4
-#define SE RB5
 
 //Saídas para o LCD
 #define RS RD2
@@ -47,7 +46,6 @@ unsigned char wire = 0x00;
 void initialScreen(void);
 void indutorScreen(void);
 void trafoScreen(void);
-void testScreen(void);
 void voltasScreen(void);
 void bitolaScreen(void);
 
@@ -73,9 +71,14 @@ SSPADD = 0x27; // Define o valor do registrador SSPADD para uma frequência de ap
     */
     //Inicializando o LCD
     Lcd_Init();
-    Lcd_Set_Cursor(2,5);
-    Lcd_Write_String("Iniciando...");
-     __delay_ms(1000);
+    Lcd_Set_Cursor(1, 4);
+    Lcd_Write_String("Bobinadeira 1.0");
+    Lcd_Set_Cursor(3,5);
+    Lcd_Write_String("Init system");
+     for (int i = 0; i < 4; i++) {
+    Lcd_Write_Char('.');      // Adiciona um ponto
+    __delay_ms(500);          // Espera 500ms (meio segundo) entre cada ponto
+}
      
      //Limpando os caracteres
     Lcd_Clear();
@@ -88,7 +91,6 @@ SSPADD = 0x27; // Define o valor do registrador SSPADD para uma frequência de ap
     initialScreen();
     indutorScreen();
     trafoScreen();
-    testScreen();
     
     }
     return 0;
@@ -124,7 +126,14 @@ void indutorScreen() {
             __delay_ms(100);
             
             // Se SD for pressionado incrementa o tamanho do nucleo
-            if (SD == 0x00) coreDiameter++;
+            if (SD == 0x00){
+                coreDiameter++;
+                __delay_ms(100);
+            } 
+            if(SA == 0x00 && coreDiameter > 0 ){
+                coreDiameter--;
+                __delay_ms(100);
+            } 
             
             // Calcular o número de dígitos
             unsigned char numDigits = 0;
@@ -152,6 +161,7 @@ void indutorScreen() {
             
             // Se o botão próximo for pressionado...
             if (SB == 0x00) {
+                __delay_ms(100);
                 Lcd_Clear();
                 voltasScreen();
             }
@@ -170,7 +180,7 @@ void indutorScreen() {
     //Função da tela do trafo
 void trafoScreen() {
     if (SB == 0x00) {
-        __delay_ms(200);
+        __delay_ms(100);
         Lcd_Clear();
         while (flag == 0x01) {
             Lcd_Set_Cursor(1, 1);
@@ -181,7 +191,14 @@ void trafoScreen() {
             Lcd_Write_String("(c)Canc");
             __delay_ms(100);
             
-            if (SD == 0x00) coreDiameter++;
+            if (SD == 0x00){
+                coreDiameter++;
+                __delay_ms(100);
+            } 
+            if(SA == 0x00 && coreDiameter > 0 ){
+                coreDiameter--;
+                __delay_ms(100);
+            } 
             
             // Calcular o número de dígitos
             unsigned char numDigits = 0;
@@ -208,6 +225,7 @@ void trafoScreen() {
             __delay_ms(50);
             
             if (SB == 0x00) {
+                __delay_ms(100);
                 Lcd_Clear();
                 voltasScreen();
             }
@@ -233,7 +251,14 @@ void voltasScreen() {
         Lcd_Write_String("(c)Canc");
         __delay_ms(100);
         
-        if (SD == 0x00) rounds++;
+        if (SD == 0x00){
+                rounds++;
+                __delay_ms(100);
+            } 
+            if(SA == 0x00 && rounds > 0 ){
+                rounds--;
+                __delay_ms(100);
+            } 
 
         // Calcular o número de dígitos
         unsigned char numDigits = 0;
@@ -260,6 +285,7 @@ void voltasScreen() {
         __delay_ms(50);
 
         if (SB == 0x00) {
+            __delay_ms(100);
             Lcd_Clear();
             bitolaScreen();
         }
@@ -279,13 +305,20 @@ void bitolaScreen() {
         Lcd_Set_Cursor(1, 1);
         Lcd_Write_String("Qual a bitola AWG?:");
         Lcd_Set_Cursor(4, 14);
-        Lcd_Write_String("(b)Prox");
+        Lcd_Write_String("(b)Init");
         Lcd_Set_Cursor(4, 1);
         Lcd_Write_String("(c)Canc");
         __delay_ms(100);
         
         // Se SD for pressionado, incrementa a bitola
-        if (SD == 0x00) wire++;
+                if (SD == 0x00){
+                wire++;
+                __delay_ms(200);
+            } 
+            if(SA == 0x00 && wire > 0 ){
+                wire--;
+                __delay_ms(200);
+            } 
         
         // Calcular o número de dígitos
         unsigned char numDigits = 0;
@@ -326,6 +359,9 @@ void bitolaScreen() {
         }
     }
 }
+
+  
+    //Protocolo I2C para futura implementação
 /*
 void I2C_Start() {
     SSPCON2bits.SEN = 1; // Envia o sinal de início
@@ -337,13 +373,3 @@ void I2C_Stop() {
 }
 
 */
-    
-    
-    
-    void testScreen(){
-        if(SE == 0x00){
-            Lcd_Clear();
-        while(1){
-
-        }}
-    }
