@@ -3,7 +3,8 @@
 //Autor: Matheus de Oliveira
 //07-09-2024
 
-// PIC16F877A Configuration Bit Settings
+//=============================================================================
+// === PIC16F877A Configuration Bit Settings ===
 
 // CONFIG
 #pragma config FOSC = EXTRC     // Oscillator Selection bits (RC oscillator)
@@ -15,16 +16,22 @@
 #pragma config WRT = OFF        // Flash Program Memory Write Enable bits (Write protection off; all program memory may be written to by EECON control)
 #pragma config CP = OFF         // Flash Program Memory Code Protection bit (Code protection off)
 
-//Clock do MCU
+//=============================================================================
+// === Clock do MCU
+
 #define _XTAL_FREQ 8000000
 
-//Botoes de interação
+//=============================================================================
+// === Botoes de interacao
+
 #define SA RB1
 #define SB RB2
 #define SC RB3
 #define SD RB4
 
-//Saídas para o LCD
+//=============================================================================
+// === Saidas para o LCD
+
 #define RS RD2
 #define EN RD3
 #define D4 RD4
@@ -32,89 +39,99 @@
 #define D6 RD6
 #define D7 RD7
 
-//Bibliotecas
+//=============================================================================
+// === Bibliotecas
+
 #include <xc.h>
 #include "lcd.h"
 
-//Variaveis globais
+//=============================================================================
+// === Variaveis globais
+
 unsigned char flag = 0x00;
 unsigned char rounds = 0x00;
 unsigned char coreDiameter = 0x00;
 unsigned char wire = 0x00;
 
-//Protótipos das funções
+//=============================================================================
+// === Prototipos das funcoes
+
 void initialScreen(void);
 void indutorScreen(void);
 void trafoScreen(void);
 void voltasScreen(void);
 void bitolaScreen(void);
 
-int main()
-{
-    //Pinos RC3 e RC4 como entrada I2C
-    TRISC |= 0x18;
-    
-   //Pinos RD2 a RD7 como saída digital
-    TRISD &= 0x03;
-    
-    //Pinos RB1 a RB5 como enrada digital
-    TRISB |= 0x3E;
-    
-    
-    /*
-    // Configuração do módulo I2C
-SSPSTAT = 0x80; // Define o bit de síncrono (SMP = 1) para modo de alta velocidade
-SSPCON = 0x28;  // Configura o I2C em modo mestre (SSPEN = 1 e SSPM = 8)
+int main() {
+    //=============================================================================
+    // === Pinos RC3 e RC4 como entrada I2C
 
-// Configuração da velocidade do I2C
-SSPADD = 0x27; // Define o valor do registrador SSPADD para uma frequência de aproximadamente 100kHz com o Fosc de 8MHz
-    */
-    //Inicializando o LCD
+    TRISC |= 0x18;
+
+    //=============================================================================
+    // === Pinos RD2 a RD7 como saída digital
+
+    TRISD &= 0x03;
+
+    //=============================================================================
+    // === Pinos RB1 a RB5 como enrada digital
+
+    TRISB |= 0x3E;
+
+    //=============================================================================
+    // === Inicializando o sistema
     Lcd_Init();
     Lcd_Set_Cursor(1, 4);
     Lcd_Write_String("Bobinadeira 1.0");
-    Lcd_Set_Cursor(3,5);
+    Lcd_Set_Cursor(3, 5);
     Lcd_Write_String("Init system");
-     for (int i = 0; i < 4; i++) {
-    Lcd_Write_Char('.');      // Adiciona um ponto
-    __delay_ms(500);          // Espera 500ms (meio segundo) entre cada ponto
-}
-     
-     //Limpando os caracteres
+    for (int i = 0; i < 4; i++) {
+        Lcd_Write_Char('.'); // Adiciona um ponto
+        __delay_ms(500); // Espera 500ms (meio segundo) entre cada ponto
+    }
+
+    //=============================================================================
+    // === Limpando os caracteres
+
     Lcd_Clear();
     __delay_ms(50);
-     
-    //Loop infinito
-    while(1)
-    {
 
-    initialScreen();
-    indutorScreen();
-    trafoScreen();
-    
+    //Loop infinito
+    while (1) {
+
+        //=============================================================================
+        // === Chamando as funcoes
+
+        initialScreen();
+        indutorScreen();
+        trafoScreen();
     }
     return 0;
 }
 
-//Função da tela principal
-void initialScreen(){
-        flag = 0x01;
-        Lcd_Set_Cursor(1,1);
-        Lcd_Write_String("Auto Bobinadeira 1.0");
-        Lcd_Set_Cursor(2,1);
-        Lcd_Write_String("Selecione o produto:");
-        Lcd_Set_Cursor(4,1);
-        Lcd_Write_String("(A)Indutor");
-        Lcd_Set_Cursor(4,13);
-        Lcd_Write_String("(B)Trafo");
-    }
+//=============================================================================
+// === Tela inicial
 
-//Função da tela do indutor
+void initialScreen() {
+    flag = 0x01;
+    Lcd_Set_Cursor(1, 1);
+    Lcd_Write_String("Auto Bobinadeira 1.0");
+    Lcd_Set_Cursor(2, 1);
+    Lcd_Write_String("Selecione o produto:");
+    Lcd_Set_Cursor(4, 1);
+    Lcd_Write_String("(A)Indutor");
+    Lcd_Set_Cursor(4, 13);
+    Lcd_Write_String("(B)Trafo");
+}
+
+//=============================================================================
+// === Tela do indutor
+
 void indutorScreen() {
     if (SA == 0x00) {
         // Limpa o LCD
         Lcd_Clear();
-        
+
         // Enquanto a flag for 1...
         while (flag == 0x01) {
             Lcd_Set_Cursor(1, 1);
@@ -124,17 +141,17 @@ void indutorScreen() {
             Lcd_Set_Cursor(4, 1);
             Lcd_Write_String("(c)Canc");
             __delay_ms(100);
-            
+
             // Se SD for pressionado incrementa o tamanho do nucleo
-            if (SD == 0x00){
+            if (SD == 0x00) {
                 coreDiameter++;
                 __delay_ms(100);
-            } 
-            if(SA == 0x00 && coreDiameter > 0 ){
+            }
+            if (SA == 0x00 && coreDiameter > 0) {
                 coreDiameter--;
                 __delay_ms(100);
-            } 
-            
+            }
+
             // Calcular o número de dígitos
             unsigned char numDigits = 0;
             unsigned char tempCoreDiameter = coreDiameter;
@@ -146,38 +163,40 @@ void indutorScreen() {
                     tempCoreDiameter /= 10;
                 }
             }
-            
+
             // Tamanho do texto a ser exibido
             unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
             unsigned char lcdWidth = 20; // Número de colunas do LCD
             unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
-            
+
             // Ajustar a posição do cursor
             Lcd_Set_Cursor(3, startPos);
             Lcd_Write_Number(coreDiameter);
             Lcd_Set_Cursor(3, startPos + numDigits);
             Lcd_Write_String(" mm");
             __delay_ms(50);
-            
+
             // Se o botão próximo for pressionado...
             if (SB == 0x00) {
                 __delay_ms(100);
                 Lcd_Clear();
                 voltasScreen();
             }
-            
+
             // Clicando em cancelar limpa o LCD, o bit do diâmetro e retorna à tela principal
             if (SC == 0x00) {
                 Lcd_Clear();
                 coreDiameter = 0x00;
                 flag = 0x00;
-            }      
+            }
         }
     }
 }
 
-    
-    //Função da tela do trafo
+
+//=============================================================================
+// === Tela do trafo
+
 void trafoScreen() {
     if (SB == 0x00) {
         __delay_ms(100);
@@ -190,16 +209,16 @@ void trafoScreen() {
             Lcd_Set_Cursor(4, 1);
             Lcd_Write_String("(c)Canc");
             __delay_ms(100);
-            
-            if (SD == 0x00){
+
+            if (SD == 0x00) {
                 coreDiameter++;
                 __delay_ms(100);
-            } 
-            if(SA == 0x00 && coreDiameter > 0 ){
+            }
+            if (SA == 0x00 && coreDiameter > 0) {
                 coreDiameter--;
                 __delay_ms(100);
-            } 
-            
+            }
+
             // Calcular o número de dígitos
             unsigned char numDigits = 0;
             unsigned char tempCoreDiameter = coreDiameter;
@@ -211,7 +230,7 @@ void trafoScreen() {
                     tempCoreDiameter /= 10;
                 }
             }
-            
+
             // Tamanho do texto a ser exibido
             unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
             unsigned char lcdWidth = 20; // Número de colunas do LCD
@@ -223,7 +242,7 @@ void trafoScreen() {
             Lcd_Set_Cursor(3, startPos + numDigits);
             Lcd_Write_String(" mm");
             __delay_ms(50);
-            
+
             if (SB == 0x00) {
                 __delay_ms(100);
                 Lcd_Clear();
@@ -238,6 +257,8 @@ void trafoScreen() {
     }
 }
 
+//=============================================================================
+// === Tela de voltas
 
 void voltasScreen() {
     flag = 0x02;
@@ -250,15 +271,15 @@ void voltasScreen() {
         Lcd_Set_Cursor(4, 1);
         Lcd_Write_String("(c)Canc");
         __delay_ms(100);
-        
-        if (SD == 0x00){
-                rounds++;
-                __delay_ms(100);
-            } 
-            if(SA == 0x00 && rounds > 0 ){
-                rounds--;
-                __delay_ms(100);
-            } 
+
+        if (SD == 0x00) {
+            rounds++;
+            __delay_ms(100);
+        }
+        if (SA == 0x00 && rounds > 0) {
+            rounds--;
+            __delay_ms(100);
+        }
 
         // Calcular o número de dígitos
         unsigned char numDigits = 0;
@@ -271,7 +292,7 @@ void voltasScreen() {
                 tempRounds /= 10;
             }
         }
-        
+
         // Tamanho do texto a ser exibido
         unsigned char textLength = numDigits + 6; // Número de dígitos + " Voltas"
         unsigned char lcdWidth = 20; // Número de colunas do LCD
@@ -296,8 +317,10 @@ void voltasScreen() {
         }
     }
 }
-    
-    //Bitola AWG
+
+//=============================================================================
+// === Tela de bitola AWG
+
 void bitolaScreen() {
     flag = 0x02;
     Lcd_Clear();
@@ -309,17 +332,17 @@ void bitolaScreen() {
         Lcd_Set_Cursor(4, 1);
         Lcd_Write_String("(c)Canc");
         __delay_ms(100);
-        
+
         // Se SD for pressionado, incrementa a bitola
-                if (SD == 0x00){
-                wire++;
-                __delay_ms(200);
-            } 
-            if(SA == 0x00 && wire > 0 ){
-                wire--;
-                __delay_ms(200);
-            } 
-        
+        if (SD == 0x00) {
+            wire++;
+            __delay_ms(200);
+        }
+        if (SA == 0x00 && wire > 0) {
+            wire--;
+            __delay_ms(200);
+        }
+
         // Calcular o número de dígitos
         unsigned char numDigits = 0;
         unsigned char tempWire = wire;
@@ -331,26 +354,26 @@ void bitolaScreen() {
                 tempWire /= 10;
             }
         }
-        
+
         // Tamanho do texto a ser exibido
         unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
         unsigned char lcdWidth = 20; // Número de colunas do LCD
         unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
-        
+
         // Ajustar a posição do cursor
         Lcd_Set_Cursor(3, startPos);
         Lcd_Write_Number(wire);
         Lcd_Set_Cursor(3, startPos + numDigits);
         Lcd_Write_String(" mm");
         __delay_ms(50);
-        
+
         // Clicando em próximo
         if (SB == 0x00) {
             Lcd_Clear();
             // Chama a próxima tela aqui
             // Exemplo: bitolaScreen(); (se necessário)
         }
-        
+
         // Clicando em cancelar reseta o bit de controle e retorna à tela principal
         if (SC == 0x00) {
             Lcd_Clear();
@@ -359,17 +382,3 @@ void bitolaScreen() {
         }
     }
 }
-
-  
-    //Protocolo I2C para futura implementação
-/*
-void I2C_Start() {
-    SSPCON2bits.SEN = 1; // Envia o sinal de início
-    while (SSPCON2bits.SEN); // Aguarda o término do sinal de início
-}
-void I2C_Stop() {
-    SSPCON2bits.PEN = 1; // Envia o sinal de parada
-    while (SSPCON2bits.PEN); // Aguarda o término do sinal de parada
-}
-
-*/

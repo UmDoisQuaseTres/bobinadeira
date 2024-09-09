@@ -1,28 +1,8 @@
-/* Microchip Technology Inc. and its subsidiaries.  You may use this software 
- * and any derivatives exclusively with Microchip products. 
- * 
- * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS".  NO WARRANTIES, WHETHER 
- * EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE, INCLUDING ANY IMPLIED 
- * WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY, AND FITNESS FOR A 
- * PARTICULAR PURPOSE, OR ITS INTERACTION WITH MICROCHIP PRODUCTS, COMBINATION 
- * WITH ANY OTHER PRODUCTS, OR USE IN ANY APPLICATION. 
- *
- * IN NO EVENT WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, 
- * INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND 
- * WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS 
- * BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE 
- * FULLEST EXTENT ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS 
- * IN ANY WAY RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF 
- * ANY, THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
- *
- * MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE 
- * TERMS. 
- */
 
 /* 
- * File:   
- * Author: 
- * Comments:
+ * File:   LCD Library for PIC
+ * Author: electroSome
+ * Comments: Algumas alterações feitas para adaptar ao meu código
  * Revision history: 
  */
 
@@ -35,47 +15,42 @@
 
 //LCD Functions Developed by electroSome
 
+void Lcd_Port(char a) {
+    if (a & 1)
+        D4 = 1;
+    else
+        D4 = 0;
 
+    if (a & 2)
+        D5 = 1;
+    else
+        D5 = 0;
 
-void Lcd_Port(char a)
-{
-	if(a & 1)
-		D4 = 1;
-	else
-		D4 = 0;
+    if (a & 4)
+        D6 = 1;
+    else
+        D6 = 0;
 
-	if(a & 2)
-		D5 = 1;
-	else
-		D5 = 0;
-
-	if(a & 4)
-		D6 = 1;
-	else
-		D6 = 0;
-
-	if(a & 8)
-		D7 = 1;
-	else
-		D7 = 0;
-}
-void Lcd_Cmd(char a)
-{
-	RS = 0;             // => RS = 0
-	Lcd_Port(a);
-	EN  = 1;             // => E = 1
-        __delay_ms(4);
-        EN  = 0;             // => E = 0
+    if (a & 8)
+        D7 = 1;
+    else
+        D7 = 0;
 }
 
-Lcd_Clear(void)
-{
-	Lcd_Cmd(0x00);
-	Lcd_Cmd(0x01);
+void Lcd_Cmd(char a) {
+    RS = 0; // => RS = 0
+    Lcd_Port(a);
+    EN = 1; // => E = 1
+    __delay_ms(4);
+    EN = 0; // => E = 0
 }
 
-void Lcd_Set_Cursor(char row, char column)
-{
+Lcd_Clear(void) {
+    Lcd_Cmd(0x00);
+    Lcd_Cmd(0x01);
+}
+
+void Lcd_Set_Cursor(char row, char column) {
     char temp, z, y;
     switch (row) {
         case 1:
@@ -94,15 +69,14 @@ void Lcd_Set_Cursor(char row, char column)
             temp = 0x80 + column - 1; // Linha padrão (1)
             break;
     }
-    
+
     z = temp >> 4;
     y = temp & 0x0F;
     Lcd_Cmd(z);
     Lcd_Cmd(y);
 }
 
-void Lcd_Init()
-{
+void Lcd_Init() {
     Lcd_Port(0x00);
     __delay_ms(20);
     Lcd_Cmd(0x03);
@@ -113,55 +87,52 @@ void Lcd_Init()
     /////////////////////////////////////////////////////
     Lcd_Cmd(0x02);
     Lcd_Cmd(0x02);
-    Lcd_Cmd(0x08);  // Configura display de 4 linhas, 5x7 matrix
+    Lcd_Cmd(0x08); // Configura display de 4 linhas, 5x7 matrix
     Lcd_Cmd(0x00);
-    Lcd_Cmd(0x0C);  // Liga o display, sem cursor
+    Lcd_Cmd(0x0C); // Liga o display, sem cursor
     Lcd_Cmd(0x00);
-    Lcd_Cmd(0x06);  // Modo de incremento de cursor
+    Lcd_Cmd(0x06); // Modo de incremento de cursor
 }
 
-void Lcd_Write_Char(char a)
-{
-   char temp,y;
-   temp = a&0x0F;
-   y = a&0xF0;
-   RS = 1;             // => RS = 1
-   Lcd_Port(y>>4);             //Data transfer
-   EN = 1;
-   __delay_us(40);
-   EN = 0;
-   Lcd_Port(temp);
-   EN = 1;
-   __delay_us(40);
-   EN = 0;
+void Lcd_Write_Char(char a) {
+    char temp, y;
+    temp = a & 0x0F;
+    y = a & 0xF0;
+    RS = 1; // => RS = 1
+    Lcd_Port(y >> 4); //Data transfer
+    EN = 1;
+    __delay_us(40);
+    EN = 0;
+    Lcd_Port(temp);
+    EN = 1;
+    __delay_us(40);
+    EN = 0;
 }
 
-void Lcd_Write_String(char *a)
-{
-	int i;
-	for(i=0;a[i]!='\0';i++)
-	   Lcd_Write_Char(a[i]);
+void Lcd_Write_String(char *a) {
+    int i;
+    for (i = 0; a[i] != '\0'; i++)
+        Lcd_Write_Char(a[i]);
 }
 
-void Lcd_Shift_Right()
-{
-	Lcd_Cmd(0x01);
-	Lcd_Cmd(0x0C);
+void Lcd_Shift_Right() {
+    Lcd_Cmd(0x01);
+    Lcd_Cmd(0x0C);
 }
 
-void Lcd_Shift_Left()
-{
-	Lcd_Cmd(0x01);
-	Lcd_Cmd(0x08);
+void Lcd_Shift_Left() {
+    Lcd_Cmd(0x01);
+    Lcd_Cmd(0x08);
 }
+
 void Lcd_Write_Number(unsigned char num) {
-    if(num >= 100) {
-        Lcd_Write_Char((num / 100) + '0');  // Centenas
+    if (num >= 100) {
+        Lcd_Write_Char((num / 100) + '0'); // Centenas
     }
-    if(num >= 10) {
-        Lcd_Write_Char(((num % 100) / 10) + '0');  // Dezenas
+    if (num >= 10) {
+        Lcd_Write_Char(((num % 100) / 10) + '0'); // Dezenas
     }
-    Lcd_Write_Char((num % 10) + '0');  // Unidades
+    Lcd_Write_Char((num % 10) + '0'); // Unidades
 }
 
 
