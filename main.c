@@ -56,6 +56,14 @@ unsigned char wire = 0x00;
 //=============================================================================
 // === Prototipos das funcoes
 
+//Toda a parte do protocolo I2C
+void initI2C(void);
+void I2C_Start(void);
+void I2C_Stop(void);
+void I2C_Write(unsigned char data);
+unsigned char I2C_Read(unsigned char ack);
+
+//Restante das funções base
 void initialScreen(void);
 void indutorScreen(void);
 void trafoScreen(void);
@@ -81,8 +89,8 @@ int main() {
     //=============================================================================
     // === Inicializando o sistema
     Lcd_Init();
-    Lcd_Set_Cursor(1, 4);
-    Lcd_Write_String("Bobinadeira 1.0");
+    Lcd_Set_Cursor(1, 2);
+    Lcd_Write_String("Bobinadeira 0.0.1");
     Lcd_Set_Cursor(3, 5);
     Lcd_Write_String("Init system");
     for (int i = 0; i < 4; i++) {
@@ -105,6 +113,9 @@ int main() {
         initialScreen();
         indutorScreen();
         trafoScreen();
+        //initI2C(); // Inicializar I2C
+
+
     }
     return 0;
 }
@@ -115,8 +126,6 @@ int main() {
 void initialScreen() {
     flag = 0x01;
     Lcd_Set_Cursor(1, 1);
-    Lcd_Write_String("Auto Bobinadeira 1.0");
-    Lcd_Set_Cursor(2, 1);
     Lcd_Write_String("Selecione o produto:");
     Lcd_Set_Cursor(4, 1);
     Lcd_Write_String("(A)Indutor");
@@ -152,7 +161,9 @@ void indutorScreen() {
                 __delay_ms(100);
             }
 
-            // Calcular o número de dígitos
+            //=============================================================================
+            // === Calcula o numero de digitos
+
             unsigned char numDigits = 0;
             unsigned char tempCoreDiameter = coreDiameter;
             if (tempCoreDiameter == 0) {
@@ -164,12 +175,16 @@ void indutorScreen() {
                 }
             }
 
-            // Tamanho do texto a ser exibido
+            //=============================================================================
+            // === Calcula o tamanho do texto a ser exibido
+
             unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
             unsigned char lcdWidth = 20; // Número de colunas do LCD
             unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
 
-            // Ajustar a posição do cursor
+            //=============================================================================
+            // === Ajusta a posição do cursor automaticamente
+
             Lcd_Set_Cursor(3, startPos);
             Lcd_Write_Number(coreDiameter);
             Lcd_Set_Cursor(3, startPos + numDigits);
@@ -219,7 +234,9 @@ void trafoScreen() {
                 __delay_ms(100);
             }
 
-            // Calcular o número de dígitos
+            //=============================================================================
+            // === Calcula o numero de digitos
+
             unsigned char numDigits = 0;
             unsigned char tempCoreDiameter = coreDiameter;
             if (tempCoreDiameter == 0) {
@@ -231,12 +248,16 @@ void trafoScreen() {
                 }
             }
 
-            // Tamanho do texto a ser exibido
+            //=============================================================================
+            // === Calcula o tamanho do texto a ser exibido
+
             unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
             unsigned char lcdWidth = 20; // Número de colunas do LCD
             unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
 
-            // Ajustar a posição do cursor
+            //=============================================================================
+            // === Ajusta a posição do cursor automaticamente
+
             Lcd_Set_Cursor(3, startPos);
             Lcd_Write_Number(coreDiameter);
             Lcd_Set_Cursor(3, startPos + numDigits);
@@ -281,7 +302,9 @@ void voltasScreen() {
             __delay_ms(100);
         }
 
-        // Calcular o número de dígitos
+        //=============================================================================
+        // === Calcula o numero de digitos
+
         unsigned char numDigits = 0;
         unsigned char tempRounds = rounds;
         if (tempRounds == 0) {
@@ -293,12 +316,16 @@ void voltasScreen() {
             }
         }
 
-        // Tamanho do texto a ser exibido
+        //=============================================================================
+        // === Calcula o tamanho do texto a ser exibido
+
         unsigned char textLength = numDigits + 6; // Número de dígitos + " Voltas"
         unsigned char lcdWidth = 20; // Número de colunas do LCD
         unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
 
-        // Ajustar a posição do cursor
+        //=============================================================================
+        // === Ajusta a posição do cursor automaticamente
+
         Lcd_Set_Cursor(3, startPos);
         Lcd_Write_Number(rounds);
         Lcd_Set_Cursor(3, startPos + numDigits);
@@ -343,7 +370,9 @@ void bitolaScreen() {
             __delay_ms(200);
         }
 
-        // Calcular o número de dígitos
+        //=============================================================================
+        // === Calcula o numero de digitos
+
         unsigned char numDigits = 0;
         unsigned char tempWire = wire;
         if (tempWire == 0) {
@@ -355,12 +384,16 @@ void bitolaScreen() {
             }
         }
 
-        // Tamanho do texto a ser exibido
+        //=============================================================================
+        // === Calcula o tamanho do texto a ser exibido
+
         unsigned char textLength = numDigits + 3; // Número de dígitos + " mm"
         unsigned char lcdWidth = 20; // Número de colunas do LCD
         unsigned char startPos = (lcdWidth - textLength) / 2; // Posição inicial para centralizar
 
-        // Ajustar a posição do cursor
+        //=============================================================================
+        // === Ajusta a posição do cursor automaticamente
+
         Lcd_Set_Cursor(3, startPos);
         Lcd_Write_Number(wire);
         Lcd_Set_Cursor(3, startPos + numDigits);
@@ -381,4 +414,48 @@ void bitolaScreen() {
             flag = 0x00;
         }
     }
+}
+
+//=============================================================================
+// === Configuração do I2C - Futuro
+
+void initI2C() {
+    // Configura o PIC para I2C Master
+    SSPCON = 0b00101000; // I2C Master mode, clock = Fosc / (4 * (SSPADD+1))
+    SSPCON2 = 0; // Desativa funções especiais extras
+    SSPADD = 19; // Define o clock para I2C de 100 kHz (com Fosc = 8 MHz)
+    SSPSTAT = 0; // Desativa slew rate control para 100 kHz
+}
+
+void I2C_Start() {
+    SEN = 1; // Iniciar a condição de start
+    while (SEN); // Esperar até o start ser completado
+}
+
+void I2C_Stop() {
+    PEN = 1; // Iniciar a condição de stop
+    while (PEN); // Esperar até o stop ser completado
+}
+
+void I2C_Write(unsigned char data) {
+    SSPBUF = data; // Carregar dado no buffer
+    while (BF); // Esperar até o dado ser enviado
+    while (SSPCON2bits.ACKSTAT); // Verificar se houve ACK
+}
+
+unsigned char I2C_Read(unsigned char ack) {
+    RCEN = 1; // Habilitar recepção
+    while (!BF); // Esperar até a recepção estar completa
+    unsigned char data = SSPBUF; // Ler dado recebido
+
+    // Enviar ACK ou NACK
+    if (ack) {
+        ACKDT = 0; // ACK
+    } else {
+        ACKDT = 1; // NACK
+    }
+    ACKEN = 1; // Enviar ACK ou NACK
+    while (ACKEN); // Esperar ACK ou NACK ser enviado
+
+    return data;
 }
