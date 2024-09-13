@@ -19,7 +19,7 @@
 //=============================================================================
 // === Clock do MCU
 
-#define _XTAL_FREQ 8000000
+#define _XTAL_FREQ  8000000UL  // Frequência do clock para as funções de delay
 
 //=============================================================================
 // === Botoes de interacao
@@ -32,18 +32,18 @@
 //=============================================================================
 // === Saidas para o LCD
 
-#define RS RD2
-#define EN RD3
-#define D4 RD4
-#define D5 RD5
-#define D6 RD6
-#define D7 RD7
+// Definições dos pinos no PCF8574A para controlar o LCD
+#define RS  0  // Pino RS do LCD (Registrador de dados ou comando)
+#define RW  1  // Pino RW do LCD (Leitura/Escrita)
+#define EN  2  // Pino Enable do LCD
+#define BL  3  // Pino Backlight do LCD (opcional)
 
 //=============================================================================
 // === Bibliotecas
 
 #include <xc.h>
-#include "lcd.h"
+#include "pcf8574.h"  // Inclua a biblioteca PCF8574
+#include <stdio.h>
 
 //=============================================================================
 // === Variaveis globais
@@ -52,23 +52,112 @@ unsigned char flag = 0x00;
 unsigned char rounds = 0x00;
 unsigned char coreDiameter = 0x00;
 unsigned char wire = 0x00;
+__bit backLight = 0; // Controle do backlight (0 = apagado, 1 = ligado)
 
 //=============================================================================
 // === Prototipos das funcoes
 
-//Toda a parte do protocolo I2C
-void initI2C(void);
-void I2C_Start(void);
-void I2C_Stop(void);
-void I2C_Write(unsigned char data);
-unsigned char I2C_Read(unsigned char ack);
-
-//Restante das funções base
 void initialScreen(void);
 void indutorScreen(void);
 void trafoScreen(void);
 void voltasScreen(void);
 void bitolaScreen(void);
+
+//=============================================================================
+// === Funções para I2C
+
+/**
+ * @brief Envia um comando ao LCD via I2C
+ * 
+ * @param command O comando a ser enviado ao LCD
+ */
+void i2c_lcdCommand(uint8_t command) {
+    uint8_t data;
+    data = command & 0xF0;
+    pcf8574Write(data | (backLight << BL) | (1 << EN));
+    __delay_us(10);
+    pcf8574Write(data | (backLight << BL));
+    __delay_us(50);
+
+    data = command << 4;
+    pcf8574Write(data | (backLight << BL) | (1 << EN));
+    __delay_us(10);
+    pcf8574Write(data | (backLight << BL));
+    __delay_us(50);
+}
+
+/**
+ * @brief Envia dados ao LCD via I2C
+ * 
+ * @param command O dado a ser enviado ao LCD
+ */
+void i2c_lcdData(uint8_t command) {
+    uint8_t data;
+    data = command & 0xF0;
+    pcf8574Write(data | (backLight << BL) | (1 << EN) | (1 << RS));
+    __delay_us(10);
+    pcf8574Write(data | (backLight << BL) | (1 << RS));
+    __delay_us(50);
+
+    data = command << 4;
+    pcf8574Write(data | (backLight << BL) | (1 << EN) | (1 << RS));
+    __delay_us(10);
+    pcf8574Write(data | (backLight << BL) | (1 << RS));
+    __delay_us(50);
+}
+
+/**
+ * @brief Define a posição do cursor no LCD
+ * 
+ * @param x Coluna (1 a 20)
+ * @param y Linha (1 a 4)
+ */
+void i2c_lcdXY(int8_t x, int8_t y) {
+    int8_t addr[] = {0x80, 0xC0, 0x94, 0xD4}; // Endereços de início de linha para LCD 20x4
+    if (y >= 1 && y <= 4 && x >= 1 && x <= 20) {
+        i2c_lcdCommand(addr[y - 1] + (x - 1));
+    }
+}
+
+/**
+ * @brief Envia uma string de texto para o LCD
+ * 
+ * @param txt Ponteiro para a string a ser exibida
+ */
+void i2c_lcdText(const char *txt) {
+    while (*txt) {
+        i2c_lcdData(*txt++);
+    }
+}
+/**
+ * @brief Limpa o display LCD
+ */
+void i2c_lcdClear(void) {
+    i2c_lcdCommand(0x01); // Comando para limpar o LCD
+    __delay_ms(5); // Aguardar o LCD processar o comando
+}
+
+/**
+ * @brief Inicializa o LCD em modo 4-bits utilizando o PCF8574A via I2C
+ */
+void i2c_lcdInit(void) {
+    i2c_init(100000); // Inicializa o I2C com baud rate de 100kHz
+    __delay_us(10);
+    pcf8574Write(0);
+    __delay_ms(10);
+    i2c_lcdCommand(0x33); // Inicialização padrão do LCD
+    __delay_us(10);
+    i2c_lcdCommand(0x32);
+    __delay_us(10);
+    i2c_lcdCommand(0x28); // Modo 4-bits, 2 linhas
+    __delay_us(10);
+    i2c_lcdCommand(0x0F); // Liga o display, cursor ligado e piscando
+    __delay_us(10);
+    i2c_lcdCommand(0x01); // Limpa o display
+    __delay_ms(5);
+    i2c_lcdCommand(0x06); // Incrementa automaticamente o cursor
+    __delay_us(10);
+}
 
 int main() {
     //=============================================================================
@@ -88,21 +177,21 @@ int main() {
 
     //=============================================================================
     // === Inicializando o sistema
-    Lcd_Init();
-    Lcd_Set_Cursor(1, 2);
-    Lcd_Write_String("Bobinadeira 0.0.1");
-    Lcd_Set_Cursor(3, 5);
-    Lcd_Write_String("Init system");
-    for (int i = 0; i < 4; i++) {
-        Lcd_Write_Char('.'); // Adiciona um ponto
-        __delay_ms(500); // Espera 500ms (meio segundo) entre cada ponto
-    }
+    i2c_lcdInit(); // Inicializa o LCD via I2C
+    backLight = 1; // Liga o backlight do LCD
+    __delay_ms(1000); // Atraso de 1 segundo
+
+    // Exibe mensagens iniciais no LCD
+    i2c_lcdXY(2, 1);
+    i2c_lcdText("Bobinadeira 0.0.1");
+    i2c_lcdXY(3, 3);
+    i2c_lcdText(" Init system....");
+    __delay_ms(3000);
+    i2c_lcdClear(); // Limpa o LCD
+
 
     //=============================================================================
     // === Limpando os caracteres
-
-    Lcd_Clear();
-    __delay_ms(50);
 
     //Loop infinito
     while (1) {
@@ -125,12 +214,12 @@ int main() {
 
 void initialScreen() {
     flag = 0x01;
-    Lcd_Set_Cursor(1, 1);
-    Lcd_Write_String("Selecione o produto:");
-    Lcd_Set_Cursor(4, 1);
-    Lcd_Write_String("(A)Indutor");
-    Lcd_Set_Cursor(4, 13);
-    Lcd_Write_String("(B)Trafo");
+    i2c_lcdXY(1, 1);
+    i2c_lcdText("Selecione o produto:");
+    i2c_lcdXY(1, 4);
+    i2c_lcdText("(A)Indutor");
+    i2c_lcdXY(13, 4);
+    i2c_lcdText("(B)Trafo");
 }
 
 //=============================================================================
@@ -139,16 +228,17 @@ void initialScreen() {
 void indutorScreen() {
     if (SA == 0x00) {
         // Limpa o LCD
-        Lcd_Clear();
+        i2c_lcdClear();
+        __delay_ms(100);
 
         // Enquanto a flag for 1...
         while (flag == 0x01) {
-            Lcd_Set_Cursor(1, 1);
-            Lcd_Write_String("Diametro do nucleo:");
-            Lcd_Set_Cursor(4, 14);
-            Lcd_Write_String("(b)Prox");
-            Lcd_Set_Cursor(4, 1);
-            Lcd_Write_String("(c)Canc");
+            i2c_lcdXY(1, 1);
+            i2c_lcdText("Diametro do nucleo:");
+            i2c_lcdXY(14, 4);
+            i2c_lcdText("(b)Prox");
+            i2c_lcdXY(1, 4);
+            i2c_lcdText("(c)Canc");
             __delay_ms(100);
 
             // Se SD for pressionado incrementa o tamanho do nucleo
@@ -161,7 +251,7 @@ void indutorScreen() {
                 __delay_ms(100);
             }
 
-            //=============================================================================
+      /*      //=============================================================================
             // === Calcula o numero de digitos
 
             unsigned char numDigits = 0;
@@ -185,22 +275,22 @@ void indutorScreen() {
             //=============================================================================
             // === Ajusta a posição do cursor automaticamente
 
-            Lcd_Set_Cursor(3, startPos);
-            Lcd_Write_Number(coreDiameter);
-            Lcd_Set_Cursor(3, startPos + numDigits);
-            Lcd_Write_String(" mm");
+            i2c_lcdXY(3, startPos);
+            i2c_lcdText(coreDiameter);
+            i2c_lcdXY(3, startPos + numDigits);
+            i2c_lcdText(" mm");
             __delay_ms(50);
-
+*/
             // Se o botão próximo for pressionado...
             if (SB == 0x00) {
                 __delay_ms(100);
-                Lcd_Clear();
+                i2c_lcdClear();
                 voltasScreen();
             }
 
             // Clicando em cancelar limpa o LCD, o bit do diâmetro e retorna à tela principal
             if (SC == 0x00) {
-                Lcd_Clear();
+                i2c_lcdClear();
                 coreDiameter = 0x00;
                 flag = 0x00;
             }
@@ -215,14 +305,14 @@ void indutorScreen() {
 void trafoScreen() {
     if (SB == 0x00) {
         __delay_ms(100);
-        Lcd_Clear();
+        i2c_lcdClear();
         while (flag == 0x01) {
-            Lcd_Set_Cursor(1, 1);
-            Lcd_Write_String("Diametro do nucleo:");
-            Lcd_Set_Cursor(4, 14);
-            Lcd_Write_String("(b)Prox");
-            Lcd_Set_Cursor(4, 1);
-            Lcd_Write_String("(c)Canc");
+            i2c_lcdXY(1, 1);
+            i2c_lcdText("Diametro do nucleo:");
+            i2c_lcdXY(14, 4);
+            i2c_lcdText("(b)Prox");
+            i2c_lcdXY(1, 4);
+            i2c_lcdText("(c)Canc");
             __delay_ms(100);
 
             if (SD == 0x00) {
@@ -258,19 +348,19 @@ void trafoScreen() {
             //=============================================================================
             // === Ajusta a posição do cursor automaticamente
 
-            Lcd_Set_Cursor(3, startPos);
-            Lcd_Write_Number(coreDiameter);
-            Lcd_Set_Cursor(3, startPos + numDigits);
-            Lcd_Write_String(" mm");
+            i2c_lcdXY(3, startPos);
+            i2c_lcdText(coreDiameter);
+            i2c_lcdXY(3, startPos + numDigits);
+            i2c_lcdText(" mm");
             __delay_ms(50);
 
             if (SB == 0x00) {
                 __delay_ms(100);
-                Lcd_Clear();
+                i2c_lcdClear();
                 voltasScreen();
             }
             if (SC == 0x00) {
-                Lcd_Clear();
+                i2c_lcdClear();
                 coreDiameter = 0x00;
                 flag = 0x00;
             }
@@ -283,14 +373,14 @@ void trafoScreen() {
 
 void voltasScreen() {
     flag = 0x02;
-    Lcd_Clear();
+    i2c_lcdClear();
     while (flag == 0x02) {
-        Lcd_Set_Cursor(1, 1);
-        Lcd_Write_String("Quantas voltas:");
-        Lcd_Set_Cursor(4, 14);
-        Lcd_Write_String("(b)Prox");
-        Lcd_Set_Cursor(4, 1);
-        Lcd_Write_String("(c)Canc");
+        i2c_lcdXY(1, 1);
+        i2c_lcdText("Quantas voltas:");
+        i2c_lcdXY(14, 4);
+        i2c_lcdText("(b)Prox");
+        i2c_lcdXY(1, 4);
+        i2c_lcdText("(c)Canc");
         __delay_ms(100);
 
         if (SD == 0x00) {
@@ -326,19 +416,19 @@ void voltasScreen() {
         //=============================================================================
         // === Ajusta a posição do cursor automaticamente
 
-        Lcd_Set_Cursor(3, startPos);
-        Lcd_Write_Number(rounds);
-        Lcd_Set_Cursor(3, startPos + numDigits);
-        Lcd_Write_String(" Voltas");
+        i2c_lcdXY(3, startPos);
+        i2c_lcdText(rounds);
+        i2c_lcdXY(3, startPos + numDigits);
+        i2c_lcdText(" Voltas");
         __delay_ms(50);
 
         if (SB == 0x00) {
             __delay_ms(100);
-            Lcd_Clear();
+            i2c_lcdClear();
             bitolaScreen();
         }
         if (SC == 0x00) {
-            Lcd_Clear();
+            i2c_lcdClear();
             rounds = 0x00;
             flag = 0x00;
         }
@@ -350,14 +440,14 @@ void voltasScreen() {
 
 void bitolaScreen() {
     flag = 0x02;
-    Lcd_Clear();
+    i2c_lcdClear();
     while (flag == 0x02) {
-        Lcd_Set_Cursor(1, 1);
-        Lcd_Write_String("Qual a bitola AWG?:");
-        Lcd_Set_Cursor(4, 14);
-        Lcd_Write_String("(b)Init");
-        Lcd_Set_Cursor(4, 1);
-        Lcd_Write_String("(c)Canc");
+        i2c_lcdXY(1, 1);
+        i2c_lcdText("Qual a bitola AWG?:");
+        i2c_lcdXY(14, 4);
+        i2c_lcdText("(b)Init");
+        i2c_lcdXY(1, 4);
+        i2c_lcdText("(c)Canc");
         __delay_ms(100);
 
         // Se SD for pressionado, incrementa a bitola
@@ -394,22 +484,22 @@ void bitolaScreen() {
         //=============================================================================
         // === Ajusta a posição do cursor automaticamente
 
-        Lcd_Set_Cursor(3, startPos);
-        Lcd_Write_Number(wire);
-        Lcd_Set_Cursor(3, startPos + numDigits);
-        Lcd_Write_String(" mm");
+        i2c_lcdXY(3, startPos);
+        i2c_lcdText(wire);
+        i2c_lcdXY(3, startPos + numDigits);
+        i2c_lcdText(" mm");
         __delay_ms(50);
 
         // Clicando em próximo
         if (SB == 0x00) {
-            Lcd_Clear();
+            i2c_lcdClear();
             // Chama a próxima tela aqui
             // Exemplo: bitolaScreen(); (se necessário)
         }
 
         // Clicando em cancelar reseta o bit de controle e retorna à tela principal
         if (SC == 0x00) {
-            Lcd_Clear();
+            i2c_lcdClear();
             wire = 0x00;
             flag = 0x00;
         }
@@ -419,43 +509,3 @@ void bitolaScreen() {
 //=============================================================================
 // === Configuração do I2C - Futuro
 
-void initI2C() {
-    // Configura o PIC para I2C Master
-    SSPCON = 0b00101000; // I2C Master mode, clock = Fosc / (4 * (SSPADD+1))
-    SSPCON2 = 0; // Desativa funções especiais extras
-    SSPADD = 19; // Define o clock para I2C de 100 kHz (com Fosc = 8 MHz)
-    SSPSTAT = 0; // Desativa slew rate control para 100 kHz
-}
-
-void I2C_Start() {
-    SEN = 1; // Iniciar a condição de start
-    while (SEN); // Esperar até o start ser completado
-}
-
-void I2C_Stop() {
-    PEN = 1; // Iniciar a condição de stop
-    while (PEN); // Esperar até o stop ser completado
-}
-
-void I2C_Write(unsigned char data) {
-    SSPBUF = data; // Carregar dado no buffer
-    while (BF); // Esperar até o dado ser enviado
-    while (SSPCON2bits.ACKSTAT); // Verificar se houve ACK
-}
-
-unsigned char I2C_Read(unsigned char ack) {
-    RCEN = 1; // Habilitar recepção
-    while (!BF); // Esperar até a recepção estar completa
-    unsigned char data = SSPBUF; // Ler dado recebido
-
-    // Enviar ACK ou NACK
-    if (ack) {
-        ACKDT = 0; // ACK
-    } else {
-        ACKDT = 1; // NACK
-    }
-    ACKEN = 1; // Enviar ACK ou NACK
-    while (ACKEN); // Esperar ACK ou NACK ser enviado
-
-    return data;
-}
