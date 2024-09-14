@@ -18,7 +18,7 @@ void i2c_init(long baud) {
     TRISC4 = 1; // SDA como entrada
     SSPCON = 0x28; // Modo I2C Master, clock = Fosc / (4 * (SSPADD + 1))
     SSPSTAT = 0x00; // Slew rate disabled para operação em 100kHz
-    SSPADD = (_XTAL_FREQ / (4 * baud)) - 1; // Calcula o valor do baud rate
+    SSPADD = 9; // Calcula o valor do baud rate
 }
 
 void i2c_stop(void) {
