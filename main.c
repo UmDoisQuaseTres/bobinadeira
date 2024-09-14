@@ -4,44 +4,22 @@
 //07-09-2024
 
 //=============================================================================
-// === PIC16F877A Configuration Bit Settings ===
+// === Configurações do micro
 
-// CONFIG
-#pragma config FOSC = EXTRC     // Oscillator Selection bits (RC oscillator)
-#pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
-#pragma config PWRTE = OFF      // Power-up Timer Enable bit (PWRT disabled)
-#pragma config BOREN = OFF      // Brown-out Reset Enable bit (BOR disabled)
-#pragma config LVP = OFF        // Low-Voltage (Single-Supply) In-Circuit Serial Programming Enable bit (RB3 is digital I/O, HV on MCLR must be used for programming)
-#pragma config CPD = OFF        // Data EEPROM Memory Code Protection bit (Data EEPROM code protection off)
-#pragma config WRT = OFF        // Flash Program Memory Write Enable bits (Write protection off; all program memory may be written to by EECON control)
-#pragma config CP = OFF         // Flash Program Memory Code Protection bit (Code protection off)
-
-//=============================================================================
-// === Clock do MCU
-
-#define _XTAL_FREQ  1000000UL  // Frequência do clock para as funções de delay
+#include "config.h"
 
 //=============================================================================
 // === Botoes de interacao
-
 #define SA RB1  //Botão para selecionar a opção (a) e (-)
 #define SB RB2  //Botão para próximo menu
 #define SC RB3  //Botão para cancelar ação e retornar ao menu principal
 #define SD RB4  //Botão para selecionar a opção (b) e (+)
 
 //=============================================================================
-// === Saidas para o LCD
-
-// Definições dos pinos no PCF8574A para controlar o LCD
-#define RS  0  // Pino RS do LCD (Registrador de dados ou comando)
-#define RW  1  // Pino RW do LCD (Leitura/Escrita)
-#define EN  2  // Pino Enable do LCD
-#define BL  3  // Pino Backlight do LCD (opcional)
-
-//=============================================================================
 // === Bibliotecas
 
 #include <xc.h>
+#include "i2c_lcd.h"
 #include "pcf8574.h"  // Inclua a biblioteca PCF8574
 #include <stdio.h>
 
@@ -62,13 +40,6 @@ __bit backLight = 0; // Controle do backlight (0 = apagado, 1 = ligado)
 
 //=============================================================================
 // === Prototipos das funcoes
-
-void i2c_lcdCommand(uint8_t command);
-void i2c_lcdData(uint8_t command);
-void i2c_lcdXY(int8_t x, int8_t y);
-void i2c_lcdText(const char *txt);
-void i2c_lcdClear(void);
-void i2c_lcdInit(void);
 void read_buts(void);
 void initialScreen(void);
 
@@ -122,88 +93,6 @@ int main() {
     return 0;
 }
 
-// === Funções para I2C
-
-// Funções auxiliares para escrever um comando ou dado no LCD
-
-void i2c_lcdCommand(uint8_t command) {
-    uint8_t upper_nibble = command & 0xF0;
-    uint8_t lower_nibble = (command << 4) & 0xF0;
-
-    // Enviar parte alta dos comandos
-    pcf8574Write(upper_nibble | (backLight << BL) | (1 << EN));
-    __delay_us(10);
-    pcf8574Write(upper_nibble | (backLight << BL));
-    __delay_us(50);
-
-    // Enviar parte baixa dos comandos
-    pcf8574Write(lower_nibble | (backLight << BL) | (1 << EN));
-    __delay_us(10);
-    pcf8574Write(lower_nibble | (backLight << BL));
-    __delay_us(50);
-}
-
-void i2c_lcdData(uint8_t data) {
-    uint8_t upper_nibble = data & 0xF0;
-    uint8_t lower_nibble = (data << 4) & 0xF0;
-
-    // Enviar parte alta dos dados
-    pcf8574Write(upper_nibble | (backLight << BL) | (1 << EN) | (1 << RS));
-    __delay_us(10);
-    pcf8574Write(upper_nibble | (backLight << BL) | (1 << RS));
-    __delay_us(50);
-
-    // Enviar parte baixa dos dados
-    pcf8574Write(lower_nibble | (backLight << BL) | (1 << EN) | (1 << RS));
-    __delay_us(10);
-    pcf8574Write(lower_nibble | (backLight << BL) | (1 << RS));
-    __delay_us(50);
-}
-
-// Função para posicionar o cursor
-
-void i2c_lcdXY(int8_t x, int8_t y) {
-    int8_t addr[] = {0x80, 0xC0, 0x94, 0xD4}; // Endereços de início de linha para LCD 20x4
-    if (y >= 1 && y <= 4 && x >= 1 && x <= 20) {
-        i2c_lcdCommand(addr[y - 1] + (x - 1));
-    }
-}
-
-// Função para escrever um texto completo no LCD de uma vez só
-
-void i2c_lcdText(const char *txt) {
-    while (*txt) {
-        i2c_lcdData(*txt++);
-    }
-}
-
-// Função para limpar o LCD
-
-void i2c_lcdClear(void) {
-    i2c_lcdCommand(0x01); // Comando para limpar o LCD
-    __delay_ms(10); // Aguardar o LCD processar o comando
-}
-
-// Inicializa o LCD em modo 4-bits utilizando o PCF8574A via I2C
-
-void i2c_lcdInit(void) {
-    i2c_init(100000); // Inicializa o I2C com baud rate de 100kHz
-    __delay_us(10);
-    pcf8574Write(0);
-    __delay_ms(10);
-    i2c_lcdCommand(0x33); // Inicialização padrão do LCD
-    __delay_us(10);
-    i2c_lcdCommand(0x32); // Configura o LCD para 4 bits
-    __delay_us(10);
-    i2c_lcdCommand(0x28); // Modo 4-bits, 2 linhas
-    __delay_us(10);
-    i2c_lcdCommand(0x0F); // Liga o display e desliga o cursor
-    __delay_us(10);
-    i2c_lcdCommand(0x01); // Limpa o display
-    __delay_ms(10); // Aguardar o LCD processar o comando
-    i2c_lcdCommand(0x06); // Incrementa automaticamente o cursor
-    __delay_us(10);
-}
 //=============================================================================
 // === Tela inicial
 
