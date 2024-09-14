@@ -24,10 +24,10 @@
 //=============================================================================
 // === Botoes de interacao
 
-#define SA RB1
-#define SB RB2
-#define SC RB3
-#define SD RB4
+#define SA RB1  //Botão para selecionar a opção (a) e (-)
+#define SB RB2  //Botão para próximo menu
+#define SC RB3  //Botão para cancelar ação e retornar ao menu principal
+#define SD RB4  //Botão para selecionar a opção (b) e (+)
 
 //=============================================================================
 // === Saidas para o LCD
@@ -46,18 +46,23 @@
 #include <stdio.h>
 
 //=============================================================================
-// === Variaveis globais
+// === Flags auxiliares
 
 unsigned char flag = 0x00;
 unsigned char flag_more = 0x00;
 unsigned char flag_minus = 0x00;
-unsigned short screen = 0x00;
-unsigned short previousScreen = 0x00;
-unsigned char nTela = 3;
+
+//=============================================================================
+// === Variaveis globais
+
+unsigned short screen = 0x00;  //Qual a tela atual
+unsigned short previousScreen = 0x00; //Estado da tela anterior
+unsigned char nScreen = 3;  //Número de menus
 __bit backLight = 0; // Controle do backlight (0 = apagado, 1 = ligado)
 
 //=============================================================================
 // === Prototipos das funcoes
+
 void i2c_lcdCommand(uint8_t command);
 void i2c_lcdData(uint8_t command);
 void i2c_lcdXY(int8_t x, int8_t y);
@@ -74,11 +79,6 @@ int main() {
     // === Pinos RC3 e RC4 como entrada I2C
 
     TRISC |= 0x18;
-
-    //=============================================================================
-    // === Pinos RD2 a RD7 como saída digital
-
-    TRISD &= 0x03;
 
     //=============================================================================
     // === Pinos RB1 a RB5 como enrada digital
@@ -231,7 +231,7 @@ void read_buts() {
         flag_minus = 0x00; // Limpa a flag
         screen--; // Decrementa a tela
         if (screen < 0x01) {
-            screen = nTela; // Se o valor de screen for menor que 1, retorna ao valor máximo
+            screen = nScreen; // Se o valor de screen for menor que 1, retorna ao valor máximo
         }
         i2c_lcdClear(); // Limpa a tela, substituindo o lcd_clr
     }
@@ -240,7 +240,7 @@ void read_buts() {
     if (SB && flag_more) {
         flag_more = 0x00; // Limpa a flag
         screen++; // Incrementa a tela
-        if (screen > nTela) {
+        if (screen > nScreen) {
             screen = 0x01; // Se o valor de screen for maior que o valor máximo, retorna a 1
         }
         i2c_lcdClear(); // Limpa a tela, substituindo o lcd_clr
