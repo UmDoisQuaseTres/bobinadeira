@@ -1,10 +1,3 @@
-/*
- * File:   i2c.c
- * Author: Admin
- *
- * Adapted for PIC16F877A
- */
-
 #include <xc.h>
 #include "i2c.h"
 
@@ -18,7 +11,11 @@ void i2c_init(long baud) {
     TRISC4 = 1; // SDA como entrada
     SSPCON = 0x28; // Modo I2C Master, clock = Fosc / (4 * (SSPADD + 1))
     SSPSTAT = 0x00; // Slew rate disabled para operação em 100kHz
-    SSPADD = 9; // Calcula o valor do baud rate
+
+    // Cálculo do valor de SSPADD para 100 kHz com Fosc = 8 MHz
+    // Formula: SSPADD = (Fosc / (4 * BaudRate)) - 1
+    // Para BaudRate = 100kHz:
+    SSPADD = (8000000 / (4 * 100000)) - 1; // Resultado é 19
 }
 
 void i2c_stop(void) {

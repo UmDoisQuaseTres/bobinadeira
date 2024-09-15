@@ -64,7 +64,7 @@ void i2c_lcdInit(void) {
     __delay_us(10);
     i2c_lcdCommand(0x28); 
     __delay_us(10);
-    i2c_lcdCommand(0x0F); 
+    i2c_lcdCommand(0x0C); // Desativa o cursor e o cursor piscante
     __delay_us(10);
     i2c_lcdCommand(0x01); 
     __delay_ms(10);

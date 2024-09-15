@@ -35,7 +35,7 @@
         <targetDevice>PIC16F877A</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>Simulator</platformTool>
+        <platformTool>VSMViewerPlatformTool</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.50</languageToolchainVersion>
         <platform>2</platform>
@@ -632,6 +632,8 @@
         <property key="codecoverage.outputfile" value=""/>
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="design.file"
+                  value="../../.wine/drive_c/users/matheus/Documents/Bobinadeira.pdsprj"/>
         <property key="event.recorder.debugger.behavior" value="Running"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
@@ -656,6 +658,8 @@
         <property key="periphComp6.gte" value="gt"/>
         <property key="reset.scl" value="false"/>
         <property key="reset.type" value="MCLR"/>
+        <property key="target.ip.address" value="localhost"/>
+        <property key="target.ip.port" value="8001"/>
         <property key="toolpack.updateoptions"
                   value="toolpack.updateoptions.uselatestoolpack"/>
         <property key="toolpack.updateoptions.packversion"
@@ -1101,6 +1105,18 @@
                   value=""/>
         <property key="warningmessagebreakoptions.warningmessages" value="holdstate"/>
       </Tool>
+      <VSMViewerPlatformTool>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="design.file"
+                  value="../../.wine/drive_c/users/matheus/Documents/Bobinadeira.pdsprj"/>
+        <property key="event.recorder.debugger.behavior" value="Running"/>
+        <property key="event.recorder.enabled" value="false"/>
+        <property key="event.recorder.scvd.files" value=""/>
+        <property key="lastid" value=""/>
+        <property key="target.ip.address" value="localhost"/>
+        <property key="target.ip.port" value="8001"/>
+      </VSMViewerPlatformTool>
       <XC8-CO>
         <property key="coverage-enable" value=""/>
         <property key="stack-guidance" value="false"/>

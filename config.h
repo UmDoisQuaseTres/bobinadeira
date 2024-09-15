@@ -28,6 +28,15 @@
 #define EN  2  // Pino Enable do LCD
 #define BL  3  // Pino Backlight do LCD (opcional)
 
+//=============================================================================
+// === Botoes de interacao
+#define SA RB1  // Botão para selecionar 'Indutor'
+#define SB RB2  // Botão para selecionar 'Trafo'
+#define SC RB3  // Botão para voltar à tela inicial
+#define SD RB4  // Botão para navegar entre submenus
+#define SE RB5  // Botão para incrementar valores
+#define SF RB6  // Botão para decrementar valores
+
 // Outras possíveis definições ou macros
 #define LCD_BACKLIGHT_ON  1
 #define LCD_BACKLIGHT_OFF 0
