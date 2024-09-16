@@ -35,11 +35,11 @@ void pcf8574Write(uint8_t data){
  * Esta função realiza a leitura de um byte de dados do dispositivo
  * PCF8574A utilizando a interface I2C.
  */
-uint8_t pcf8574Read(){
+/*uint8_t pcf8574Read(){
     uint8_t data;  
     i2c_start();            // Inicia a comunicação I2C
     i2c_write(PCF8574_R);   // Envia o endereço de leitura do PCF8574A
     data = i2c_read(0);     // Lê o dado e envia NACK (última leitura)
     i2c_stop();             // Finaliza a comunicação I2C
     return data;            // Retorna o dado lido
-}
+}*/

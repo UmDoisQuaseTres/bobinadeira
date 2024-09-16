@@ -36,7 +36,7 @@ void i2c_write(uint8_t data) {
     }
 }
 
-uint8_t i2c_read(char ACK) {
+/*uint8_t i2c_read(char ACK) {
     uint8_t temp;
     SSPCON2bits.RCEN = 1; // Habilita recepção
     i2c_wait(); // Aguarda o dado ser recebido
@@ -48,4 +48,4 @@ uint8_t i2c_read(char ACK) {
     SSPCON2bits.ACKEN = 1; // Envia o sinal de ACK ou NACK
     i2c_wait(); // Aguarda o término
     return temp; // Retorna o dado recebido
-}
+}*/

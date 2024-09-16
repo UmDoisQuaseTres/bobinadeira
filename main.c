@@ -26,7 +26,7 @@ unsigned short previousScreen = 0x00; // Estado da tela anterior
 
 unsigned char diameter = 0x00;
 unsigned char rounds = 0x00;
-__bit backLight = 0; // Controle do backlight (0 = apagado, 1 = ligado)
+uint8_t backLight = 0; // Controle do backlight (0 = apagado, 1 = ligado)
 
 //Variaveis de apoio para conversão de char
 char roundsStr[5]; // Buffer para armazenar a string das voltas (incluindo '\0')
@@ -82,7 +82,7 @@ int main() {
         if (SC == 0x00) { // Pressionar o SC volta ao início e zera as flags
             screen = 0x01;
             diameter = 0x00;
-            rounds == 0x00;
+            rounds = 0x00;
         }
 
         if (SB == 0x00 && screen == 0x01) screen = 0x02; // Se estiver na tela inicial e apertar SB, vai para Trafo

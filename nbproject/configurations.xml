@@ -35,9 +35,9 @@
         <targetDevice>PIC16F877A</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>VSMViewerPlatformTool</platformTool>
+        <platformTool>Simulator</platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>2.50</languageToolchainVersion>
+        <languageToolchainVersion>2.46</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <packs>
