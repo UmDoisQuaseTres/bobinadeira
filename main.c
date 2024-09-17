@@ -1,6 +1,6 @@
 // Projeto bobinadeira automática para trafos e indutores
 // Autor: Matheus de Oliveira
-// 07-09-2024
+// Início: 07-09-2024
 
 //=============================================================================
 // === Configurações do micro
@@ -34,14 +34,11 @@ char diameterStr[5]; // Buffer para armazenar a string do diâmetro (incluindo '\
 
 //=============================================================================
 // === Prototipos das funcoes
+
 void initialScreen(void);
-void transformer(void);
-void indutor(void);
 void nucleo(void);
 void voltas(void);
-void increment(void);
-void readButton(void);
-void decrementValues(void);
+void readButtons(void);
 
 //=============================================================================
 
@@ -50,7 +47,7 @@ int main() {
     TRISC |= 0x18;
 
     // PORTB como entrada digital
-    TRISB |= 0xFF;
+    TRISB |= 0x3E;
 
     // Ativa os pull-ups internos do PORTB
     OPTION_REGbits.nRBPU = 0x00; // Ativa os pull-ups internos (RBPU = 0)
@@ -71,23 +68,14 @@ int main() {
     i2c_lcdClear(); // Limpa o LCD
 
     // Loop principal
+
     while (1) {
+
         //Carregando funções de leitura de botões
-
-        readButton(); // Lê os botões
-        increment(); // Verifica incrementos
-        decrementValues(); //Decrementavalores
-
-        //Verificações para os botões
-        if (SC == 0x00) { // Pressionar o SC volta ao início e zera as flags
-            screen = 0x01;
-            diameter = 0x00;
-            rounds = 0x00;
-        }
+        readButtons();
 
         if (SB == 0x00 && screen == 0x01) screen = 0x02; // Se estiver na tela inicial e apertar SB, vai para Trafo
         if (SA == 0x00 && screen == 0x01) screen = 0x03; // Se estiver na tela inicial e apertar SA, vai para Indutor
-
 
         //=============================================================================
         // === Inicio do switch para selecionar as telas
@@ -100,10 +88,10 @@ int main() {
                     initialScreen(); // Mostra a tela inicial
                     break;
                 case 0x02:
-                    indutor();
+                    nucleo();
                     break;
                 case 0x03:
-                    transformer();
+                    nucleo();
                     break;
                 case 0x04:
                     voltas();
@@ -127,20 +115,6 @@ void initialScreen() {
     i2c_lcdText("(A)Indutor");
     i2c_lcdXY(13, 4);
     i2c_lcdText("(B)Trafo");
-}
-
-//=============================================================================
-// === Menu de Indutor
-
-void indutor() {
-    nucleo(); // Chama a função para selecionar o núcleo
-}
-
-//=============================================================================
-// === Menu de Trafo
-
-void transformer() {
-    nucleo(); // Chama a função para selecionar o núcleo
 }
 
 //=============================================================================
@@ -186,9 +160,11 @@ void voltas() {
 }
 
 //=============================================================================
-// === Função de Incremento
+// === Leitura dos botões
 
-void increment() {
+void readButtons() {
+
+    //Botão de incremento
     // Verifica se o botão SE está pressionado
     if (SE == 0x00) {
         if (screen == 0x02 || screen == 0x03) {
@@ -205,12 +181,8 @@ void increment() {
             voltas(); // Atualiza a tela após o incremento
         }
     }
-}
 
-//=============================================================================
-// === Função de Decremento
-
-void decrementValues() {
+    //Botão de decremento
     // Verifica se o botão SF está pressionado
     if (SF == 0x00) {
         if (screen == 0x02 || screen == 0x03) {
@@ -229,12 +201,8 @@ void decrementValues() {
             voltas(); // Atualiza a tela após o decremento
         }
     }
-}
 
-//=============================================================================
-// === Função para ler botões para o menu de telas
-
-void readButton() {
+    //Botão para passar de tela
     // Verifica se o botão SB está pressionado
     if (SB == 0x00) {
 
@@ -244,4 +212,12 @@ void readButton() {
             screen++; // Caso contrário, incrementa normalmente
         }
     }
+
+    //Botão de cancelar
+    if (SC == 0x00) { // Pressionar o SC volta ao início e zera as flags
+        screen = 0x01;
+        diameter = 0x00;
+        rounds = 0x00;
+    }
 }
+

@@ -20,7 +20,7 @@
 //=============================================================================
 // === Clock do MCU
 
-#define _XTAL_FREQ  1000000UL  // Frequência do clock para as funções de delay
+#define _XTAL_FREQ  8000000UL  // Frequência do clock para as funções de delay
 
 // Definições dos pinos no PCF8574A para controlar o LCD
 #define RS  0  // Pino RS do LCD (Registrador de dados ou comando)
@@ -33,9 +33,8 @@
 #define SA RB1  // Botão para selecionar 'Indutor'
 #define SB RB2  // Botão para selecionar 'Trafo'
 #define SC RB3  // Botão para voltar à tela inicial
-#define SD RB4  // Botão para navegar entre submenus
-#define SE RB5  // Botão para incrementar valores
-#define SF RB6  // Botão para decrementar valores
+#define SE RB4  // Botão para incrementar valores
+#define SF RB5  // Botão para decrementar valores
 
 // Outras possíveis definições ou macros
 #define LCD_BACKLIGHT_ON  1
