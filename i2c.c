@@ -9,9 +9,9 @@ void i2c_wait(void) {
 void i2c_init(long baud) {
     TRISC3 = 1; // SCL como entrada
     TRISC4 = 1; // SDA como entrada
-    SSPCON = 0x28; // Modo I2C Master, clock = Fosc / (4 * (SSPADD + 1))
+    SSPCON1 = 0x28; // Modo I2C Master, clock = Fosc / (4 * (SSPADD + 1))
     SSPSTAT = 0x00; // Slew rate disabled para operação em 100kHz
-    SSPADD = (unsigned char)((8000000 / (4 * baud)) - 1);
+    SSPADD = (unsigned char)((8000000 / (4 * baud)) - 1); // Calcula o valor de baud rate
 }
 
 void i2c_stop(void) {
@@ -32,16 +32,16 @@ void i2c_write(uint8_t data) {
     }
 }
 
-/*uint8_t i2c_read(char ACK) {
+uint8_t i2c_read(char ACK) {
     uint8_t temp;
     SSPCON2bits.RCEN = 1; // Habilita recepção
     i2c_wait(); // Aguarda o dado ser recebido
     temp = SSPBUF; // Lê o dado recebido
     if (ACK == 0)
-        SSPCON2bits.ACKDT = 1; // Não enviar ACK
+        SSPCON2bits.ACKDT = 1; // Não enviar ACK (NACK)
     else
         SSPCON2bits.ACKDT = 0; // Enviar ACK
     SSPCON2bits.ACKEN = 1; // Envia o sinal de ACK ou NACK
     i2c_wait(); // Aguarda o término
     return temp; // Retorna o dado recebido
-}*/
+}

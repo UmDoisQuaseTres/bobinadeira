@@ -1,6 +1,7 @@
 #include "config.h"
 #include "i2c_lcd.h"
 #include "pcf8574.h"
+#include "delaytmr.h"
 #include <stdio.h>
 
 extern uint8_t backLight; // Variável que controla o estado do backlight
@@ -50,14 +51,14 @@ void i2c_lcdText(const char *txt) {
 
 void i2c_lcdClear(void) {
     i2c_lcdCommand(0x01); 
-    __delay_ms(10); 
+    delay_ms(10); 
 }
 
 void i2c_lcdInit(void) {
     i2c_init(100000); 
     __delay_us(10);
     pcf8574Write(0);
-    __delay_ms(10);
+    delay_ms(10);
     i2c_lcdCommand(0x33); 
     __delay_us(10);
     i2c_lcdCommand(0x32); 
@@ -67,7 +68,7 @@ void i2c_lcdInit(void) {
     i2c_lcdCommand(0x0C); // Desativa o cursor e o cursor piscante
     __delay_us(10);
     i2c_lcdCommand(0x01); 
-    __delay_ms(10);
+    delay_ms(10);
     i2c_lcdCommand(0x06); 
     __delay_us(10);
 }

@@ -3,12 +3,14 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>Bobinadeira</name>
-            <creation-uuid>706b2442-9bbc-47b1-a358-ec0d242f53cd</creation-uuid>
+            <name>BobiNew</name>
+            <creation-uuid>9c6f4d93-281e-4e44-9762-2651ac6f6976</creation-uuid>
             <make-project-type>0</make-project-type>
             <sourceEncoding>ISO-8859-1</sourceEncoding>
             <make-dep-projects/>
-            <sourceRootList/>
+            <sourceRootList>
+                <sourceRootElem>.</sourceRootElem>
+            </sourceRootList>
             <confList>
                 <confElem>
                     <name>default</name>

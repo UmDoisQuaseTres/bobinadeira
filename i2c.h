@@ -10,7 +10,7 @@
 
 #include <xc.h> // include processor files - each processor file is guarded.  
 
-#define _XTAL_FREQ 8000000UL  // Define the system frequency for delay functions
+#define _XTAL_FREQ 1000000UL  // Define the system frequency for delay functions
 
 void i2c_wait(void);
 void i2c_init(long baud);
